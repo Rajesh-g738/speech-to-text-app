@@ -1,4 +1,5 @@
 import { useState, useRef } from "react";
+import axios from "axios";
 
 function App() {
 
@@ -17,7 +18,9 @@ function App() {
     const recognition = new SpeechRecognition();
 
     recognition.continuous = true;
+
     recognition.interimResults = true;
+
     recognition.lang = "en-US";
 
     recognition.onresult = (event) => {
@@ -30,7 +33,8 @@ function App() {
         i++
       ) {
 
-        transcript += event.results[i][0].transcript;
+        transcript +=
+          event.results[i][0].transcript;
 
       }
 
@@ -60,19 +64,52 @@ function App() {
 
   };
 
+  const uploadAudio = async () => {
+
+    if (!selectedFile) {
+
+      alert("Please select audio file");
+
+      return;
+
+    }
+
+    const formData = new FormData();
+
+    formData.append("audio", selectedFile);
+
+    try {
+
+      const response = await axios.post(
+        "http://localhost:5000/transcribe",
+        formData
+      );
+
+      setText(response.data.transcription);
+
+    } catch (error) {
+
+      console.log(error);
+
+    }
+
+  };
+
   return (
 
     <div className="min-h-screen bg-black text-white flex flex-col items-center justify-center p-10">
 
       <h1 className="text-5xl font-bold mb-10 text-green-400">
+
         Speech To Text App
+
       </h1>
 
       <div className="bg-gray-900 w-full max-w-3xl min-h-[250px] p-6 rounded-xl border border-green-500">
 
         <p className="text-lg whitespace-pre-wrap">
 
-          {text || "Your speech will appear here..."}
+          {text || "Your transcription will appear here..."}
 
         </p>
 
@@ -82,39 +119,39 @@ function App() {
 
         <button
           onClick={startListening}
-          className="bg-green-500 hover:bg-green-600 px-6 py-3 rounded-lg text-lg font-semibold"
+          className="bg-green-500 px-6 py-3 rounded-lg"
         >
+
           Start Listening
+
         </button>
 
         <button
           onClick={stopListening}
-          className="bg-red-500 hover:bg-red-600 px-6 py-3 rounded-lg text-lg font-semibold"
+          className="bg-red-500 px-6 py-3 rounded-lg"
         >
+
           Stop Listening
+
         </button>
 
       </div>
 
-      <div className="mt-8">
+      <div className="mt-10">
 
         <input
           type="file"
           onChange={handleFileChange}
-          className="mb-4"
         />
 
-        {selectedFile && (
+        <button
+          onClick={uploadAudio}
+          className="bg-blue-500 px-6 py-3 rounded-lg ml-5"
+        >
 
-          <p className="text-green-400">
+          Upload Audio
 
-            Selected File:
-            {" "}
-            {selectedFile.name}
-
-          </p>
-
-        )}
+        </button>
 
       </div>
 
@@ -122,7 +159,7 @@ function App() {
 
         {isListening ? (
 
-          <p className="text-green-400 animate-pulse text-xl">
+          <p className="text-green-400">
 
             🎤 Listening...
 
@@ -130,7 +167,7 @@ function App() {
 
         ) : (
 
-          <p className="text-red-400 text-xl">
+          <p className="text-red-400">
 
             Microphone Stopped
 
